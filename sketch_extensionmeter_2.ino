@@ -1,24 +1,32 @@
+/* Landslide monitoring with LoRaWAN.
+ * 
+ * Board: Arduino Leonardo
+ * Lora module: MTDOT 915
+ * Sensor: Extension meter
+ * 
+ * Author: J. Barthélemy
+ * Version: 1.0
+ */
+
 #include "LowPower.h"
 
+// Parameters
+int   WIPER_PIN  = 0;       # Wiper pin for the sensor
+int   GROUND_PIN = 2;       # Ground pin for the sensor
+int   N_READINGS = 1000;    # Number of readings
+float VREF       = 5.120;   # To be calibrated for each board!
+float calib      = 1004.88; # To be calibrated for each extension meter
 
-int WIPER_PIN      = 0;
-int GROUND_PIN     = 2;
-int N_READINGS     = 1000;
-
-float VREF = 5.120;
-float calib = 1004.88;
-
+// Setup: setting the serial interfaces and joining the TTN network
 void setup() {
 
   Serial.begin(9600);
-  Serial1.begin(115200);
- 
+  Serial1.begin(115200); 
   join_lora();
 
 }
 
-
-// joining the lorawan network
+// Joining the lorawan network
 void join_lora() {
 
   send_at_command("AT","OK",500);
@@ -33,8 +41,7 @@ void join_lora() {
 
 }
 
-
-// sending AT commands to the LoraWan module
+// Sending AT commands to the LoraWan module
 void send_at_command(const char* cmd, const char* expected_ans, int waiting_period) {
 
   // cleaning buffer
@@ -67,24 +74,7 @@ void send_at_command(const char* cmd, const char* expected_ans, int waiting_peri
 
 }
 
-void send_data(float val_1) {
-
-  // prepare the payload
-  char at_payload[20];
-  memset(at_payload,'\0', 20);
-  const char sep[] = ";";
-  strcat(at_payload,"AT+SEND=");
-
-  // ... adding val_1
-  char val_1_str[8];
-  dtostrf(val_1, -6, 1, val_1_str);
-  strcat(at_payload, val_1_str);
-
-  // send it via lorawan
-  send_at_command(at_payload,"OK",10000);
-
-}
-
+// Sending the data in argument using Cayenne LPP format for analog input
 void send_data_bin(float val_1) {
 
   // convert float to int
@@ -105,37 +95,30 @@ void send_data_bin(float val_1) {
   memset(at_payload,'\0', string_payload.length() + 1);
   string_payload.toCharArray(at_payload, string_payload.length() + 1);
 
-  //Serial.println("Payload:");
-  //Serial.println(string_payload);
-
   // send it via lorawan
   send_at_command(at_payload,"OK",10000);
 
 }
 
+// Main loop: reading data, sending it and sleep
 void loop() {
 
   float dist = 0;
   float ground_val = 0;
 
-  //float dist = calib * ((wiper_val - ground_val) / (VREF - ground_val));
-  
+  // reading the measures and average them
   for( int i = 0; i < N_READINGS; i++) {
     float wiper_val = analogRead(WIPER_PIN) * VREF;  
     dist = dist + (calib * ((wiper_val - ground_val) / (VREF - ground_val)));
     dist = dist / 2;
   }
+  // scaling the measure
   dist = round(dist / 1000.0);
-
-  //Serial.print("Distance=");
-  //Serial.println(dist);
 
   //send_data(dist);
   send_data_bin(dist);
   
-  //delay(2875);
-  //delay(1000 * 60 * 5) 
-
+  // sleeping for 5 mintures
   for( int j = 0; j < 35; j++) {
     LowPower.powerDown(SLEEP_8S,ADC_OFF, BOD_OFF);
   }
