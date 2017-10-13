@@ -34,8 +34,8 @@ void join_lora() {
   send_at_command("AT+PN=1","OK",500);
   send_at_command("AT+FSB=2","OK",500);
   send_at_command("AT+NJM=1","OK",500);
-  send_at_command("AT+NI=0,70B3D57EF0006A30","ID",1000);
-  send_at_command("AT+NK=0,11735D89A02090D70EA8FE587DAA6E2D","Key",1000);
+  send_at_command("AT+NI=0,=== APP EUI ===","ID",1000);
+  send_at_command("AT+NK=0,=== APP KEY ===","Key",1000);
   send_at_command("AT+TXP=20","OK",500);
   send_at_command("AT+JOIN","OK",10000);
 
