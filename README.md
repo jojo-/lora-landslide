@@ -7,3 +7,6 @@ This Arduino sketch monitors a landslide using an extension meter and sends the 
 - Arduino Leonardo
 - Multi-tech MTDOT 915 LoRaWAN module
 - Extension meter
+
+## Credentials
+Do not forget to update the `APP EUI` and `APP KEY` in the `join_lora()` function with your credentials.
